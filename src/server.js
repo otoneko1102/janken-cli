@@ -49,6 +49,7 @@ function judge(a, b) {
 }
 
 const waiting = [];
+let playerCount = 0;
 
 const server = serve(
   {
@@ -72,7 +73,7 @@ wss.on("connection", (ws) => {
       raw.toString(),
     );
     if (msg.type === "join") {
-      ws.playerName = msg.name;
+      ws.playerName = `Player${++playerCount}`;
       waiting.push(ws);
       consola.info(
         `[join] ${msg.name} (waiting: ${waiting.length})`,

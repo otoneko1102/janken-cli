@@ -13,8 +13,7 @@ const program = new Command();
 program
   .name("Janken")
   .description("Janken for CLI")
-  .argument("<name>", "player name")
-  .action((name) => {
+  .action(() => {
     const configPath = resolve(
       process.cwd(),
       "config.json",
@@ -45,7 +44,6 @@ program
       ws.send(
         JSON.stringify({
           type: "join",
-          name,
         }),
       );
     });
