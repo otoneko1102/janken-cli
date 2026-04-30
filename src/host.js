@@ -5,19 +5,12 @@ import { WebSocketServer } from "ws";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { consola } from "consola";
+import { judge, buildResultMessages } from "./janken.js";
+
+export { judge };
 
 const app = new Hono();
 app.get("/", (c) => c.text("janken-cli server running"));
-
-// rock: 0 / scissors: 1 / paper: 2
-const HANDS = ["rock", "scissors", "paper"];
-
-export function judge(a, b) {
-  if (a === b) return "draw";
-  return (HANDS.indexOf(a) - HANDS.indexOf(b) + 3) % 3 === 2
-    ? "win"
-    : "lose";
-}
 
 const waiting = [];
 
@@ -55,35 +48,15 @@ export function startMatch(p1, p2) {
         choices[p1.playerName] &&
         choices[p2.playerName]
       ) {
-        const r1 = judge(
+        const { r1, r2, msg1, msg2 } = buildResultMessages(
           choices[p1.playerName],
           choices[p2.playerName],
         );
-        const r2 =
-          r1 === "draw"
-            ? "draw"
-            : r1 === "win"
-              ? "lose"
-              : "win";
         consola.success(
           `[result] ${p1.playerName}=${r1}, ${p2.playerName}=${r2}`,
         );
-        p1.send(
-          JSON.stringify({
-            type: "result",
-            result: r1,
-            myHand: choices[p1.playerName],
-            opponentHand: choices[p2.playerName],
-          }),
-        );
-        p2.send(
-          JSON.stringify({
-            type: "result",
-            result: r2,
-            myHand: choices[p2.playerName],
-            opponentHand: choices[p1.playerName],
-          }),
-        );
+        p1.send(msg1);
+        p2.send(msg2);
       }
     }
   }
