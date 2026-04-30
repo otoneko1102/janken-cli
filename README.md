@@ -13,8 +13,8 @@ WebSocket を使った対人型じゃんけん CLI です。
 
 ## Requirements
 
-- Node.js v24 以上
-- pnpm v10 以上
+- Node.js v22 以上
+- pnpm v9 以上
 
 ## Installation
 
