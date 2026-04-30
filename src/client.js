@@ -4,6 +4,11 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { consola } from "consola";
 import { HANDS, judge } from "./janken.js";
+import {
+  loadUserConfig,
+  saveUserConfig,
+  getUserConfigPath,
+} from "./userConfig.js";
 
 export { judge };
 
@@ -18,6 +23,26 @@ export function showResult(myHand, opponentHand) {
 }
 
 const program = new Command();
+
+const VALID_KEYS = ["host", "name"];
+
+program
+  .command("set <key> <value>")
+  .description(
+    `Save a setting to user config (${getUserConfigPath()})`,
+  )
+  .action((key, value) => {
+    if (!VALID_KEYS.includes(key)) {
+      consola.error(
+        `Unknown key: "${key}". Valid keys: ${VALID_KEYS.join(", ")}`,
+      );
+      process.exit(1);
+    }
+    saveUserConfig({ [key]: value });
+    consola.success(
+      `Saved ${key}="${value}" to user config (${getUserConfigPath()})`,
+    );
+  });
 
 program
   .name("Janken")
@@ -44,20 +69,26 @@ program
       return;
     }
 
-    const configPath = resolve(
-      process.cwd(),
-      options.config ?? "config.json",
-    );
+    // npm package (JANKEN_INSTALLED): CLI args > userConfig
+    // git clone (no flag):            CLI args > local config.json
     let config = {};
-    if (existsSync(configPath)) {
-      try {
-        config = JSON.parse(
-          readFileSync(configPath, "utf-8"),
-        );
-      } catch {
-        consola.warn(
-          "Failed to load config. Using default settings.",
-        );
+    if (process.env.JANKEN_INSTALLED) {
+      config = loadUserConfig();
+    } else {
+      const configPath = resolve(
+        process.cwd(),
+        options.config ?? "config.json",
+      );
+      if (existsSync(configPath)) {
+        try {
+          config = JSON.parse(
+            readFileSync(configPath, "utf-8"),
+          );
+        } catch {
+          consola.warn(
+            "Failed to load config. Using default settings.",
+          );
+        }
       }
     }
 

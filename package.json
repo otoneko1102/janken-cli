@@ -1,9 +1,18 @@
 {
   "name": "janken-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "A WebSocket-based janken (rock-scissors-paper) CLI game",
   "type": "module",
   "main": "index.js",
+  "bin": {
+    "janken": "bin/janken.js"
+  },
+  "files": [
+    "bin",
+    "src/client.js",
+    "src/janken.js",
+    "src/userConfig.js"
+  ],
   "scripts": {
     "dev:cf": "wrangler dev",
     "test": "jest",

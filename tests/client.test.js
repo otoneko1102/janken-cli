@@ -14,12 +14,29 @@ jest.mock("ws", () => {
   return { __esModule: true, default: WsMock };
 });
 
+jest.mock("../src/userConfig.js", () => ({
+  loadUserConfig: jest.fn(() => ({})),
+  saveUserConfig: jest.fn(),
+  getUserConfigPath: jest.fn(
+    () => "/mock/config/janken-cli/config.json",
+  ),
+}));
+
 jest.mock("commander", () => {
   let _savedCallback = null;
+  let _setActionCallback = null;
+  const mockSubCommand = {
+    description: jest.fn().mockReturnThis(),
+    action: jest.fn((cb) => {
+      _setActionCallback = cb;
+      return mockSubCommand;
+    }),
+  };
   const mockProgram = {
     name: jest.fn().mockReturnThis(),
     description: jest.fn().mockReturnThis(),
     option: jest.fn().mockReturnThis(),
+    command: jest.fn(() => mockSubCommand),
     action: jest.fn((cb) => {
       _savedCallback = cb;
       return mockProgram;
@@ -29,6 +46,7 @@ jest.mock("commander", () => {
   return {
     Command: jest.fn(() => mockProgram),
     getActionCallback: () => _savedCallback,
+    getSetActionCallback: () => _setActionCallback,
   };
 });
 
@@ -55,6 +73,7 @@ const { judge, showResult } = require("../src/client.js");
 const { consola } = require("consola");
 const WebSocket = require("ws").default;
 const { Command } = require("commander");
+const userConfig = require("../src/userConfig.js");
 
 // --- judge() ---
 
@@ -336,5 +355,114 @@ describe("WebSocket client behaviour", () => {
       "You win!",
     );
     expect(wsInstance.close).toHaveBeenCalled();
+  });
+});
+
+// --- set command ---
+
+describe("set command", () => {
+  let setActionCallback;
+
+  beforeAll(() => {
+    setActionCallback = jest
+      .requireMock("commander")
+      .getSetActionCallback();
+  });
+
+  beforeEach(() => jest.clearAllMocks());
+
+  test("saves host via set command", () => {
+    setActionCallback("host", "wss://example.com");
+    expect(userConfig.saveUserConfig).toHaveBeenCalledWith({
+      host: "wss://example.com",
+    });
+    expect(consola.success).toHaveBeenCalled();
+  });
+
+  test("saves name via set command", () => {
+    setActionCallback("name", "Alice");
+    expect(userConfig.saveUserConfig).toHaveBeenCalledWith({
+      name: "Alice",
+    });
+    expect(consola.success).toHaveBeenCalled();
+  });
+
+  test("rejects unknown keys", () => {
+    const exit = jest
+      .spyOn(process, "exit")
+      .mockImplementation(() => {
+        throw new Error("process.exit");
+      });
+    expect(() =>
+      setActionCallback("unknown", "value"),
+    ).toThrow("process.exit");
+    expect(consola.error).toHaveBeenCalled();
+    expect(
+      userConfig.saveUserConfig,
+    ).not.toHaveBeenCalled();
+    exit.mockRestore();
+  });
+});
+
+// --- config loading mode ---
+
+describe("config loading mode", () => {
+  let actionCallback;
+
+  beforeAll(() => {
+    actionCallback = jest
+      .requireMock("commander")
+      .getActionCallback();
+  });
+
+  beforeEach(() => jest.clearAllMocks());
+
+  test("uses userConfig when JANKEN_INSTALLED is set", async () => {
+    process.env.JANKEN_INSTALLED = "1";
+    userConfig.loadUserConfig.mockReturnValue({
+      host: "wss://user-config.example.com",
+      name: "UserConfigName",
+    });
+    consola.prompt = jest.fn().mockResolvedValue("rock");
+    await actionCallback({ test: false });
+    const ws = jest
+      .requireMock("ws")
+      .default.getLastInstance();
+    ws.on.mock.calls.find(([e]) => e === "open")?.[1]();
+    expect(ws.send).toHaveBeenCalledWith(
+      JSON.stringify({
+        type: "join",
+        name: "UserConfigName",
+      }),
+    );
+    expect(
+      jest.requireMock("ws").default,
+    ).toHaveBeenCalledWith("wss://user-config.example.com");
+    delete process.env.JANKEN_INSTALLED;
+  });
+
+  test("uses local config.json when JANKEN_INSTALLED is not set", async () => {
+    delete process.env.JANKEN_INSTALLED;
+    const { existsSync, readFileSync } = require("fs");
+    existsSync.mockReturnValue(true);
+    readFileSync.mockReturnValue(
+      JSON.stringify({
+        host: "ws://local-config:3000",
+        name: "LocalUser",
+      }),
+    );
+    consola.prompt = jest.fn().mockResolvedValue("rock");
+    await actionCallback({ test: false });
+    const ws = jest
+      .requireMock("ws")
+      .default.getLastInstance();
+    ws.on.mock.calls.find(([e]) => e === "open")?.[1]();
+    expect(ws.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "join", name: "LocalUser" }),
+    );
+    expect(
+      userConfig.loadUserConfig,
+    ).not.toHaveBeenCalled();
+    existsSync.mockReturnValue(false);
   });
 });

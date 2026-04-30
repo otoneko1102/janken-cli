@@ -6,9 +6,17 @@ WebSocket を使った対人型じゃんけん CLI です。
 ## Public Servers
 
 > [!Note]
->   
-> `config.json` の `host` または `pnpm client --host <hostname>` で指定することでサーバーに接続できます。  
-> 設定などは [Client](#client) を参照。
+>
+> **npm でインストールした場合:**
+>
+> ```bash
+> janken set host wss://janken-cli.oto.im
+> janken
+> ```
+>
+> **リポジトリをクローンした場合:**  
+> `config.json` の `host` または `pnpm client --host <hostname>` で指定。  
+> 設定などは [Client (git clone)](#configuration-git-clone) を参照。
 
 `Node:`
 
@@ -45,13 +53,56 @@ pnpm install
 
 # Client
 
-## Quick Start
+## npx
+
+Node.js さえあれば、リポジトリをクローンせずにそのまま遊べます。
+
+```bash
+npx janken-cli --host wss://janken-cli.oto.im --name YourName
+```
+
+グローバルインストールする場合:
+
+```bash
+npm install -g janken-cli
+janken --host wss://janken-cli.oto.im --name YourName
+```
+
+### セットアップ（グローバルインストール後）
+
+`--host` / `--name` を毎回指定しなくて済むよう、`set` コマンドで設定を保存できます。
+
+```bash
+janken set host wss://janken-cli.oto.im
+janken set name YourName
+```
+
+設定はOS のユーザーディレクトリに保存されるため、パッケージをアップデートしても失われません。
+
+| OS | 保存先 |
+|---|---|
+| Windows | `%APPDATA%\janken-cli\config.json` |
+| macOS / Linux | `~/.config/janken-cli/config.json` |
+
+保存後は引数なしで起動できます。
+
+```bash
+janken
+```
+
+### 優先順位
+
+```
+--name / --host  >  janken set で保存した設定  >  デフォルト値
+```
+
+## Quick Start（git clone）
 
 ```bash
 pnpm client
 ```
 
-## Configuration
+## Configuration（git clone）
 
 `config.json` から設定を読み込みます。`config.json.example` をコピーして作成してください。
 
@@ -85,6 +136,10 @@ cp config.json.example config.json
 > ```
 
 ## Options
+
+> [!Note]
+> `--config` オプションは git clone でのセルフホスト向けです。  
+> npm でインストールした場合は `janken set` を使用してください。
 
 ```
 pnpm client [options]
