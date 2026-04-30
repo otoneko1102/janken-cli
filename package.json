@@ -1,27 +1,48 @@
 {
-  "name": "chaos-janken",
+  "name": "janken-cli",
   "version": "1.0.0",
   "description": "",
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node src/server.js",
+    "deploy": "wrangler deploy",
+    "dev:cf": "wrangler dev",
+    "test": "jest",
+    "host": "node src/host.js",
+    "host:test": "node src/host.js --config \"config.test.js\"",
     "client": "node src/client.js",
-    "format": "prettier --write ./src"
+    "client:test": "node src/client.js --config \"config.test.js\"",
+    "format": "prettier --write ./src ./tests",
+    "format:check": "prettier --check ./src ./tests"
   },
   "keywords": [],
-  "author": "",
+  "author": "otoneko.",
   "license": "MIT",
-  "packageManager": "pnpm@10.32.1",
   "dependencies": {
-    "@hono/node-server": "^2.0.0",
-    "commander": "^14.0.3",
-    "consola": "^3.4.2",
-    "hono": "^4.12.15",
-    "ws": "^8.20.0"
+    "@hono/node-server": "2.0.0",
+    "commander": "14.0.3",
+    "consola": "3.4.2",
+    "hono": "4.12.15",
+    "ws": "8.20.0"
   },
   "devDependencies": {
-    "prettier": "^3.8.3"
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "babel-jest": "^30.3.0",
+    "jest": "^30.3.0",
+    "prettier": "^3.8.3",
+    "wrangler": "^4.86.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "workerd"
+    ]
+  },
+  "engines": {
+    "pnpm": "^10",
+    "node": "^24"
   }
 }

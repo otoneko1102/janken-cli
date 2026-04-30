@@ -1,0 +1,20 @@
+{
+  // https://developers.cloudflare.com/workers/wrangler/configuration/
+  "name": "janken-cli",
+  "main": "src/host.cf.js",
+  "compatibility_date": "2026-04-30",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "JANKEN_ROOM",
+        "class_name": "JankenRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["JankenRoom"]
+    }
+  ]
+}
