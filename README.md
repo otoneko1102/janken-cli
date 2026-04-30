@@ -5,8 +5,10 @@ WebSocket を使った対人型じゃんけん CLI です。
 
 ## Public Servers
 
-`config.json` の `host` または `pnpm client --host <hostname>` で指定することでサーバーに接続できます。  
-設定などは [Client](#client) を参照。
+> [!Note]
+>   
+> `config.json` の `host` または `pnpm client --host <hostname>` で指定することでサーバーに接続できます。  
+> 設定などは [Client](#client) を参照。
 
 `Node:`
 
