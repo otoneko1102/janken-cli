@@ -173,7 +173,7 @@ pnpm host --config ./my-config.json
 pnpm wrangler login
 
 # 2. デプロイ
-pnpm wrangler:deploy
+npx wrangler deploy
 
 # 3. クライアントで接続
 pnpm client --host wss://janken-cli.<your-subdomain>.workers.dev
