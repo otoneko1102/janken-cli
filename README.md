@@ -3,6 +3,23 @@
 WebSocket を使った対人型じゃんけん CLI です。  
 サーバーを立ててクライアント同士でリアルタイムに対戦できます。
 
+## Public Servers
+
+`config.json` の `host` または `pnpm client --host <hostname>` で指定することでサーバーに接続できます。  
+設定などは [Client](#client) を参照。
+
+`Node:`
+
+```
+wss://janken-cli.oto.im
+```
+
+`Cloudflare:`
+
+```
+wss://janken-cli.devuloper.workers.dev
+```
+
 ## Features
 
 - WebSocket によるリアルタイム対戦
