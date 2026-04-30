@@ -34,10 +34,13 @@ program
   )
   .action(async (options) => {
     if (options.test) {
-      const hand = await promptHand();
-      const cpuHand =
-        HANDS[Math.floor(Math.random() * HANDS.length)];
-      showResult(hand, cpuHand);
+      let hand, cpuHand;
+      do {
+        hand = await promptHand();
+        cpuHand =
+          HANDS[Math.floor(Math.random() * HANDS.length)];
+        showResult(hand, cpuHand);
+      } while (judge(hand, cpuHand) === "draw");
       return;
     }
 
@@ -82,6 +85,18 @@ program
 
       if (msg.type === "start") {
         consola.info(`Opponent: ${msg.opponent}`);
+        promptHand().then((hand) => {
+          ws.send(
+            JSON.stringify({
+              type: "choice",
+              hand,
+            }),
+          );
+        });
+      }
+
+      if (msg.type === "draw") {
+        showResult(msg.myHand, msg.opponentHand);
         promptHand().then((hand) => {
           ws.send(
             JSON.stringify({

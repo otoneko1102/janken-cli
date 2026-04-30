@@ -171,7 +171,7 @@ describe("startMatch()", () => {
     });
   });
 
-  test("both players get draw when choosing the same hand", () => {
+  test("sends draw message when both choose the same hand", () => {
     const p1 = createMockWs("Player1");
     const p2 = createMockWs("Player2");
     startMatch(p1, p2);
@@ -179,15 +179,57 @@ describe("startMatch()", () => {
     p1.emit("message", { type: "choice", hand: "paper" });
     p2.emit("message", { type: "choice", hand: "paper" });
 
+    const p1Draw = p1.send.mock.calls
+      .map(([m]) => JSON.parse(m))
+      .find((m) => m.type === "draw");
+    const p2Draw = p2.send.mock.calls
+      .map(([m]) => JSON.parse(m))
+      .find((m) => m.type === "draw");
+
+    expect(p1Draw).toEqual({
+      type: "draw",
+      myHand: "paper",
+      opponentHand: "paper",
+    });
+    expect(p2Draw).toEqual({
+      type: "draw",
+      myHand: "paper",
+      opponentHand: "paper",
+    });
+  });
+
+  test("continues match after draw until a winner emerges", () => {
+    const p1 = createMockWs("Player1");
+    const p2 = createMockWs("Player2");
+    startMatch(p1, p2);
+
+    // Round 1: draw
+    p1.emit("message", { type: "choice", hand: "rock" });
+    p2.emit("message", { type: "choice", hand: "rock" });
+
+    // No result yet, draw message sent
+    expect(
+      p1.send.mock.calls
+        .map(([m]) => JSON.parse(m))
+        .find((m) => m.type === "draw"),
+    ).toBeDefined();
+    expect(
+      p1.send.mock.calls
+        .map(([m]) => JSON.parse(m))
+        .find((m) => m.type === "result"),
+    ).toBeUndefined();
+
+    // Round 2: p1 wins
+    p1.emit("message", { type: "choice", hand: "rock" });
+    p2.emit("message", {
+      type: "choice",
+      hand: "scissors",
+    });
+
     const p1Result = p1.send.mock.calls
       .map(([m]) => JSON.parse(m))
       .find((m) => m.type === "result");
-    const p2Result = p2.send.mock.calls
-      .map(([m]) => JSON.parse(m))
-      .find((m) => m.type === "result");
-
-    expect(p1Result.result).toBe("draw");
-    expect(p2Result.result).toBe("draw");
+    expect(p1Result?.result).toBe("win");
   });
 
   test("ignores duplicate choice from the same player", () => {

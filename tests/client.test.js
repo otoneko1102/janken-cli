@@ -303,6 +303,25 @@ describe("WebSocket client behaviour", () => {
     existsSync.mockReturnValue(false);
   });
 
+  test('shows draw and re-prompts on "draw" message', async () => {
+    consola.prompt.mockResolvedValue("paper");
+    await getHandler("message")(
+      Buffer.from(
+        JSON.stringify({
+          type: "draw",
+          myHand: "rock",
+          opponentHand: "rock",
+        }),
+      ),
+    );
+    await Promise.resolve();
+    expect(consola.info).toHaveBeenCalledWith("Draw");
+    expect(wsInstance.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "choice", hand: "paper" }),
+    );
+    expect(wsInstance.close).not.toHaveBeenCalled();
+  });
+
   test('shows result and closes ws on "result" message', () => {
     getHandler("message")(
       Buffer.from(

@@ -55,10 +55,9 @@ export function startMatch(p1, p2) {
         choices[p1.playerName] &&
         choices[p2.playerName]
       ) {
-        const r1 = judge(
-          choices[p1.playerName],
-          choices[p2.playerName],
-        );
+        const hand1 = choices[p1.playerName];
+        const hand2 = choices[p2.playerName];
+        const r1 = judge(hand1, hand2);
         const r2 =
           r1 === "draw"
             ? "draw"
@@ -68,22 +67,41 @@ export function startMatch(p1, p2) {
         consola.success(
           `[result] ${p1.playerName}=${r1}, ${p2.playerName}=${r2}`,
         );
-        p1.send(
-          JSON.stringify({
-            type: "result",
-            result: r1,
-            myHand: choices[p1.playerName],
-            opponentHand: choices[p2.playerName],
-          }),
-        );
-        p2.send(
-          JSON.stringify({
-            type: "result",
-            result: r2,
-            myHand: choices[p2.playerName],
-            opponentHand: choices[p1.playerName],
-          }),
-        );
+        if (r1 === "draw") {
+          choices[p1.playerName] = null;
+          choices[p2.playerName] = null;
+          p1.send(
+            JSON.stringify({
+              type: "draw",
+              myHand: hand1,
+              opponentHand: hand2,
+            }),
+          );
+          p2.send(
+            JSON.stringify({
+              type: "draw",
+              myHand: hand2,
+              opponentHand: hand1,
+            }),
+          );
+        } else {
+          p1.send(
+            JSON.stringify({
+              type: "result",
+              result: r1,
+              myHand: hand1,
+              opponentHand: hand2,
+            }),
+          );
+          p2.send(
+            JSON.stringify({
+              type: "result",
+              result: r2,
+              myHand: hand2,
+              opponentHand: hand1,
+            }),
+          );
+        }
       }
     }
   }

@@ -15,7 +15,9 @@ export class JankenRoom {
 
   async fetch(request) {
     if (request.headers.get("Upgrade") !== "websocket") {
-      return new Response("Expected WebSocket", { status: 426 });
+      return new Response("Expected WebSocket", {
+        status: 426,
+      });
     }
 
     const pair = new WebSocketPair();
@@ -30,7 +32,10 @@ export class JankenRoom {
       hand: null,
     });
 
-    return new Response(null, { status: 101, webSocket: client });
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
   }
 
   /** Find a live WebSocket by its attachment id. */
@@ -63,7 +68,8 @@ export class JankenRoom {
         );
 
       if (waitingWs) {
-        const waitingData = waitingWs.deserializeAttachment();
+        const waitingData =
+          waitingWs.deserializeAttachment();
 
         ws.serializeAttachment({
           ...data,
@@ -86,7 +92,10 @@ export class JankenRoom {
           }),
         );
         waitingWs.send(
-          JSON.stringify({ type: "start", opponent: playerName }),
+          JSON.stringify({
+            type: "start",
+            opponent: playerName,
+          }),
         );
       } else {
         ws.serializeAttachment({
@@ -109,15 +118,41 @@ export class JankenRoom {
       const opponentWs = this._getById(data.opponentId);
       if (!opponentWs) return;
 
-      const opponentData = opponentWs.deserializeAttachment();
+      const opponentData =
+        opponentWs.deserializeAttachment();
       if (opponentData.hand === null) return; // opponent hasn't chosen yet
 
       const myHand = msg.hand;
       const opponentHand = opponentData.hand;
-      const { msg1, msg2 } = buildResultMessages(myHand, opponentHand);
+      const { r1, msg1, msg2 } = buildResultMessages(
+        myHand,
+        opponentHand,
+      );
 
-      ws.send(msg1);
-      opponentWs.send(msg2);
+      if (r1 === "draw") {
+        ws.serializeAttachment({ ...data, hand: null });
+        opponentWs.serializeAttachment({
+          ...opponentData,
+          hand: null,
+        });
+        ws.send(
+          JSON.stringify({
+            type: "draw",
+            myHand,
+            opponentHand,
+          }),
+        );
+        opponentWs.send(
+          JSON.stringify({
+            type: "draw",
+            myHand: opponentHand,
+            opponentHand: myHand,
+          }),
+        );
+      } else {
+        ws.send(msg1);
+        opponentWs.send(msg2);
+      }
     }
   }
 

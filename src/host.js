@@ -48,15 +48,36 @@ export function startMatch(p1, p2) {
         choices[p1.playerName] &&
         choices[p2.playerName]
       ) {
+        const hand1 = choices[p1.playerName];
+        const hand2 = choices[p2.playerName];
         const { r1, r2, msg1, msg2 } = buildResultMessages(
-          choices[p1.playerName],
-          choices[p2.playerName],
+          hand1,
+          hand2,
         );
         consola.success(
           `[result] ${p1.playerName}=${r1}, ${p2.playerName}=${r2}`,
         );
-        p1.send(msg1);
-        p2.send(msg2);
+        if (r1 === "draw") {
+          choices[p1.playerName] = null;
+          choices[p2.playerName] = null;
+          p1.send(
+            JSON.stringify({
+              type: "draw",
+              myHand: hand1,
+              opponentHand: hand2,
+            }),
+          );
+          p2.send(
+            JSON.stringify({
+              type: "draw",
+              myHand: hand2,
+              opponentHand: hand1,
+            }),
+          );
+        } else {
+          p1.send(msg1);
+          p2.send(msg2);
+        }
       }
     }
   }
